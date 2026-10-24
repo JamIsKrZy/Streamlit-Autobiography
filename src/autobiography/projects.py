@@ -33,19 +33,20 @@ def render_paginated_list(projects: List[Project], tab_key: str):
 
     # Calculate total pages
     total_items = len(projects)
-    total_pages = math.ceil(total_items / CONSTANTS.ITEMS_PER_PAGE)
+    total_pages = math.ceil(total_items / CONSTANTS.PROJECT_ITEM_PER_PAGE)
     
     # Built-in pagination handling
     # The returned value is the currently selected page integer
     current_page = st.pagination(
         num_pages=max(1, total_pages), 
         default=1, 
-        key=f"{tab_key}_page"
+        key=f"{tab_key}_page",
+        width="stretch"
     )
     
     # Slice the list for the current page
-    start_idx = (current_page - 1) * CONSTANTS.ITEMS_PER_PAGE
-    end_idx = start_idx + CONSTANTS.ITEMS_PER_PAGE
+    start_idx = (current_page - 1) * CONSTANTS.PROJECT_ITEM_PER_PAGE
+    end_idx = start_idx + CONSTANTS.PROJECT_ITEM_PER_PAGE
     page_projects = projects[start_idx:end_idx]
     
     # Render single-column projects
@@ -91,7 +92,8 @@ with col1:
         default="All",
         label_visibility="collapsed",
         key="tech_filter",
-        on_change=reset_pagination  
+        on_change=reset_pagination ,
+        wrap=True 
     )
 with col2:
     sort_order = st.selectbox(
