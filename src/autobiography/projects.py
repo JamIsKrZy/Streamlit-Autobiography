@@ -12,8 +12,8 @@ from helper import fetch_github_projects
 def load_all_projects() -> List[Project]:
     return fetch_github_projects(CONSTANTS.GITHUB_USERNAME)
 
-# Callback to reset pagination state when filters change
 def reset_pagination():
+    # Setting these session states back to 1 will automatically update the st.pagination UI
     st.session_state.proto_page = 1
     st.session_state.passion_page = 1
 
@@ -24,7 +24,6 @@ def sort_projects(projects: List[Project], order: str) -> List[Project]:
         return sorted(projects, key=lambda p: p.name.lower())
     elif order == "Z-A":
         return sorted(projects, key=lambda p: p.name.lower(), reverse=True)
-    # Default (assumes the API returns newest first based on the 'sort=updated' param)
     return projects
 
 def render_paginated_list(projects: List[Project], tab_key: str):
@@ -34,15 +33,19 @@ def render_paginated_list(projects: List[Project], tab_key: str):
 
     # Calculate total pages
     total_items = len(projects)
-    total_pages = math.ceil(total_items / CONSTANTS.PROJECT_ITEM_PAGE)
+    total_pages = math.ceil(total_items / CONSTANTS.ITEMS_PER_PAGE)
     
-    # Get current page from state
-    page_key = f"{tab_key}_page"
-    current_page = st.session_state[page_key]
+    # Built-in pagination handling
+    # The returned value is the currently selected page integer
+    current_page = st.pagination(
+        num_pages=max(1, total_pages), 
+        default=1, 
+        key=f"{tab_key}_page"
+    )
     
     # Slice the list for the current page
-    start_idx = (current_page - 1) * CONSTANTS.PROJECT_ITEM_PAGE
-    end_idx = start_idx + CONSTANTS.PROJECT_ITEM_PAGE
+    start_idx = (current_page - 1) * CONSTANTS.ITEMS_PER_PAGE
+    end_idx = start_idx + CONSTANTS.ITEMS_PER_PAGE
     page_projects = projects[start_idx:end_idx]
     
     # Render single-column projects
@@ -59,37 +62,19 @@ def render_paginated_list(projects: List[Project], tab_key: str):
             with col2:
                 st.markdown(f"[View Repository]({p.url})")
 
-    # Pagination Controls (only show if there's more than 1 page)
-    if total_pages > 1:
-        st.divider()
-        col_prev, col_text, col_next = st.columns([1, 2, 1])
-        
-        with col_prev:
-            if st.button("⬅️ Previous", key=f"prev_{tab_key}", disabled=(current_page == 1)):
-                st.session_state[page_key] -= 1
-                st.rerun()
-                
-        with col_text:
-            st.markdown(f"<div style='text-align: center'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
-            
-        with col_next:
-            if st.button("Next ➡️", key=f"next_{tab_key}", disabled=(current_page == total_pages)):
-                st.session_state[page_key] += 1
-                st.rerun()
 
 # --- 4. Main App Interface ---
 
-# Initialize session state for pagination
+# Initialize session state for pagination so callbacks don't throw KeyError
 if 'proto_page' not in st.session_state:
     st.session_state.proto_page = 1
 if 'passion_page' not in st.session_state:
     st.session_state.passion_page = 1
 
-st.title("Project")
+st.title("Unified Project Portfolio")
 
 all_projects = load_all_projects()
 
-# Extract tech stack pills from normalized objects
 tech_stack = sorted({
     tech
     for p in all_projects
@@ -106,14 +91,14 @@ with col1:
         default="All",
         label_visibility="collapsed",
         key="tech_filter",
-        on_change=reset_pagination  # Resets pages to 1 on click
+        on_change=reset_pagination  
     )
 with col2:
     sort_order = st.selectbox(
         "Sort Order", 
         ["Newest First", "Most Stars", "A-Z", "Z-A"],
         key="sort_filter",
-        on_change=reset_pagination  # Resets pages to 1 on change
+        on_change=reset_pagination  
     )
 
 # Apply Logic: 1. Filter -> 2. Sort -> 3. Split into Categories
