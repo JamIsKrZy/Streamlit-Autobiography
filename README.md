@@ -1,6 +1,6 @@
 # Autobiography
 
-A small Streamlit app with About Me, Portfolio, and Projects pages.
+<!-- A small Streamlit app with About Me, Portfolio, and Projects pages.
 
 ## Customize the pages
 
@@ -23,5 +23,5 @@ The Projects page is separate and can be customized when it is ready.
 
 ```bash
 uv sync
-uv run streamlit run src/autobiography/__init__.py
+uv run streamlit run src/autobiography/__init__.py -->
 ```
